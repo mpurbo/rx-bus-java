@@ -28,6 +28,12 @@ public class BusTest {
     static final String TEST_STRING_MESSAGE_ID = "abcdString";
     static final String TEST_STRING_VALUE = "testStringValue";
 
+    static final String TEST_INT_MESSAGE_ID = "abcdInt";
+    static final int TEST_INT_VALUE = 1234;
+
+    static final String TEST_BOOL_MESSAGE_ID = "abcdBool";
+    static final boolean TEST_BOOL_VALUE = true;
+
     static final String TEST_REPLAY_MESSAGE_ID = "abcdReplay";
 
     @Before
@@ -80,6 +86,39 @@ public class BusTest {
     }
 
     @Test
+    public void testIntMessages() throws Exception {
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Exception> failure = new AtomicReference<Exception>();
+
+        disposables.add(
+                Bus.getInstance()
+                        .integerMessages(TEST_INT_MESSAGE_ID)
+                        .subscribe(
+                                new Consumer<Integer>() {
+                                    @Override
+                                    public void accept(Integer integer) throws Exception {
+                                        assertTrue(integer == TEST_INT_VALUE);
+                                        latch.countDown();
+                                    }
+                                },
+                                new Consumer<Throwable>() {
+                                    @Override
+                                    public void accept(Throwable throwable) throws Exception {
+                                        failure.set(new Exception(throwable));
+                                        latch.countDown();
+                                    }
+                                }
+                        ));
+
+        Bus.getInstance().post(TEST_INT_MESSAGE_ID, TEST_INT_VALUE);
+
+        latch.await();
+        if (failure.get() != null)
+            throw failure.get();
+    }
+
+    @Test
     public void testStringMessages() throws Exception {
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -106,6 +145,39 @@ public class BusTest {
                         ));
 
         Bus.getInstance().post(TEST_STRING_MESSAGE_ID, TEST_STRING_VALUE);
+
+        latch.await();
+        if (failure.get() != null)
+            throw failure.get();
+    }
+
+    @Test
+    public void testBooleanMessages() throws Exception {
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Exception> failure = new AtomicReference<Exception>();
+
+        disposables.add(
+                Bus.getInstance()
+                        .booleanMessages(TEST_BOOL_MESSAGE_ID)
+                        .subscribe(
+                                new Consumer<Boolean>() {
+                                    @Override
+                                    public void accept(Boolean value) throws Exception {
+                                        assertTrue(value);
+                                        latch.countDown();
+                                    }
+                                },
+                                new Consumer<Throwable>() {
+                                    @Override
+                                    public void accept(Throwable throwable) throws Exception {
+                                        failure.set(new Exception(throwable));
+                                        latch.countDown();
+                                    }
+                                }
+                        ));
+
+        Bus.getInstance().post(TEST_BOOL_MESSAGE_ID, TEST_BOOL_VALUE);
 
         latch.await();
         if (failure.get() != null)
